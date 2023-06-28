@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -18,6 +19,7 @@ public class SimpleJobConfiguration {
     @Bean
     public Job simpleJob1(JobRepository jobRepository, Step simleStep1){
         return new JobBuilder("simpleJob",jobRepository)
+                .incrementer(new RunIdIncrementer())// 강제로 매번 다른 ID를 실행시에 파라미터로 구현
                 .start(simleStep1)
                 .build();
     }
