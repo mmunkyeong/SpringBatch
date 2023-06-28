@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    include: secret
+  batch:
+    job:
+      names: ${job.name:NONE}
+    jdbc:
+      initialize-schema: ALWAYS
+  datasource:
+    url: jdbc:mariadb://127.0.0.1:3307/batch_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Seoul
+    driver-class-name:
+    username: ${db.name}
+    password: ${db.password}
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
