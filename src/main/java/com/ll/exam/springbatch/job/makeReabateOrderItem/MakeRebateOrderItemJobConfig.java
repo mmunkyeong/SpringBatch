@@ -18,10 +18,12 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.RepositoryItemReader;
 import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +31,7 @@ import java.util.Collections;
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
+
 public class MakeRebateOrderItemJobConfig {
     private final JobRepository jobRepository;
     private final OrderItemRepository orderItemRepository;
@@ -47,12 +50,13 @@ public class MakeRebateOrderItemJobConfig {
     @Bean
     @JobScope
     public Step makeRebateOrderItemStep1(
+            PlatformTransactionManager transactionManager,
             ItemReader orderItemReader,
             ItemProcessor orderItemToRebateOrderItemProcessor,
             ItemWriter rebateOrderItemWriter
     ) {
         return new StepBuilder("makeRebateOrderItemStep1",jobRepository)
-                .<OrderItem, RebateOrderItem>chunk(100)
+                .<OrderItem, RebateOrderItem>chunk(100,transactionManager)
                 .reader(orderItemReader)
                 .processor(orderItemToRebateOrderItemProcessor)
                 .writer(rebateOrderItemWriter)
@@ -61,13 +65,16 @@ public class MakeRebateOrderItemJobConfig {
 
     @StepScope
     @Bean
-    public RepositoryItemReader<OrderItem> orderItemReader() {
+    public RepositoryItemReader<OrderItem> orderItemReader(
+            @Value("#{jobParameters['fromId']}") long fromId,
+            @Value("#{jobParameters['toId']}") long toId
+    ) {
         return new RepositoryItemReaderBuilder<OrderItem>()
                 .name("orderItemReader")
                 .repository(orderItemRepository)
-                .methodName("findAllByIdLessThan")
+                .methodName("findAllByIdBetween")
                 .pageSize(100)
-                .arguments(Arrays.asList(6L))
+                .arguments(Arrays.asList(fromId, toId))
                 .sorts(Collections.singletonMap("id", Sort.Direction.ASC))
                 .build();
     }
@@ -75,7 +82,7 @@ public class MakeRebateOrderItemJobConfig {
     @StepScope
     @Bean
     public ItemProcessor<OrderItem, RebateOrderItem> orderItemToRebateOrderItemProcessor() {
-        return orderItem -> new RebateOrderItem(orderItem);
+        return RebateOrderItem::new;
     }
 
     @StepScope
@@ -87,7 +94,7 @@ public class MakeRebateOrderItemJobConfig {
             if (oldRebateOrderItem != null) {
                 rebateOrderItemRepository.delete(oldRebateOrderItem);
             }
-
+            System.out.println("Rebate실행!");
             rebateOrderItemRepository.save(item);
         });
     }

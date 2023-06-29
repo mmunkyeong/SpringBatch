@@ -85,6 +85,7 @@ public class ProductBackupJobConfig {
             if (oldProductBackup != null) {
                 productBackupRepository.delete(oldProductBackup);
             }
+            System.out.println("productRebateBackup실행!");
             productBackupRepository.save(item);
         });
     }
