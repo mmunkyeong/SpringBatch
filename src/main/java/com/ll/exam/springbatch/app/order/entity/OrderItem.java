@@ -10,6 +10,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
+
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
@@ -22,6 +24,7 @@ public class OrderItem extends BaseEntity {
     @ManyToOne(fetch = LAZY)
     @ToString.Exclude
     private Order order;
+    private LocalDateTime payDate;
 
     @ManyToOne(fetch = LAZY)
     private ProductOption productOption;
@@ -52,6 +55,7 @@ public class OrderItem extends BaseEntity {
         this.pgFee = 0;
         this.payPrice = calculatePayPrice();
         this.isPaid = true;
+        this.payDate = LocalDateTime.now();
     }
     public void setRefundDone() {
        if(refundQuantity==quantity) return;
