@@ -2,9 +2,7 @@ package com.ll.exam.springbatch.app.order.entity;
 
 import com.ll.exam.springbatch.app.base.entity.BaseEntity;
 import com.ll.exam.springbatch.app.product.entity.ProductOption;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,13 +20,16 @@ import static jakarta.persistence.FetchType.LAZY;
 public class RebateOrderItem extends BaseEntity {
     @OneToOne(fetch = LAZY)
     @ToString.Exclude
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private OrderItem orderItem;
 
     @ManyToOne(fetch = LAZY)
     @ToString.Exclude
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Order order;
 
     @ManyToOne(fetch = LAZY)
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private ProductOption productOption;
 
     private int quantity;
