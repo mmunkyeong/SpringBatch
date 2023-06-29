@@ -2,6 +2,7 @@ server:
   port: 8000
 spring:
   profiles:
+    active: dev
     include: secret
   batch:
     job:
@@ -17,3 +18,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create
+logging:
+  level:
+    com.ll.exam.springbatch: debug
