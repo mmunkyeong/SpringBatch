@@ -7,6 +7,7 @@ spring:
   batch:
     job:
       names: ${job.name:NONE}
+      enabled: false
     jdbc:
       initialize-schema: ALWAYS
   datasource:
@@ -20,4 +21,7 @@ spring:
       ddl-auto: create
 logging:
   level:
-    com.ll.exam.springbatch: debug
+    root: INFO
+    com.ll.exam.springbatch: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.orm.jdbc.extract: TRACE

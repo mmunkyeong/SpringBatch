@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
 
@@ -63,6 +64,7 @@ public class RebateOrderItem extends BaseEntity {
 
     public RebateOrderItem(OrderItem orderItem) {
         this.orderItem = orderItem;
+
         order = orderItem.getOrder();
         productOption = orderItem.getProductOption();
         quantity = orderItem.getQuantity();
@@ -83,7 +85,10 @@ public class RebateOrderItem extends BaseEntity {
 
         // 주문품목 추가 데이터
         orderItemCreateDate = orderItem.getCreateDate();
+
+
     }
+
     @Embeddable
     @NoArgsConstructor
     public static class EmbProductOption {
@@ -98,5 +103,25 @@ public class RebateOrderItem extends BaseEntity {
             displayColor = productOption.getDisplayColor();
             displaySize = productOption.getDisplaySize();
         }
+    }
+    public int calculatePayPrice() {
+        return salePrice * quantity;
+    }
+
+    public void setPaymentDone() {
+        this.pgFee = 0;
+        this.payPrice = calculatePayPrice();
+        this.isPaid = true;
+    }
+
+    public void setRefundDone() {
+        if (refundQuantity == quantity) return;
+
+        this.refundQuantity = quantity;
+        this.refundPrice = payPrice;
+    }
+
+    public boolean isRebateDone() {
+        return true;
     }
 }

@@ -8,6 +8,7 @@ import com.ll.exam.springbatch.app.order.service.OrderService;
 import com.ll.exam.springbatch.app.product.entity.Product;
 import com.ll.exam.springbatch.app.product.entity.ProductOption;
 import com.ll.exam.springbatch.app.product.service.ProductService;
+import com.ll.exam.springbatch.job.JobConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +25,7 @@ import java.util.List;
 public class DevInitData {
     private boolean initDataDone = false;
     @Bean
-    public CommandLineRunner initData(MemberService memberService, ProductService productService, CartService cartService, OrderService orderService){
+    public CommandLineRunner initData(JobConfig jobConfig,MemberService memberService, ProductService productService, CartService cartService, OrderService orderService) throws Exception {
         return args ->
         {
             if (initDataDone) return;
@@ -123,6 +124,8 @@ public class DevInitData {
                             product2Option__WHITE_44
                     )
             );
+            jobConfig.performMakeRebateDataJob();
+            jobConfig.performpPoductBackupJob();
         };
     }
 }

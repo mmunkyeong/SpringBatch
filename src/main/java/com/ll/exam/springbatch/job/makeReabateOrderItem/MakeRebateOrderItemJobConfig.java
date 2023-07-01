@@ -33,7 +33,6 @@ import java.util.Collections;
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
-
 public class MakeRebateOrderItemJobConfig {
     private final JobRepository jobRepository;
     private final OrderItemRepository orderItemRepository;
@@ -41,24 +40,22 @@ public class MakeRebateOrderItemJobConfig {
 
 
     @Bean
-    public Job makeRebateOrderItemJob(Step makeRebateOrderItemStep1, CommandLineRunner initData) throws Exception {
-        initData.run();
-
-        return new JobBuilder("makeRebateOrderItemJob",jobRepository)
-                .start(makeRebateOrderItemStep1)
+    public Job makeRebateDataJob(Step makeRebateDataStep1) throws Exception {
+        return new JobBuilder("makeRebateDataJob", jobRepository)
+                .start(makeRebateDataStep1)
                 .build();
     }
 
     @Bean
     @JobScope
-    public Step makeRebateOrderItemStep1(
+    public Step makeRebateDataStep1(
             PlatformTransactionManager transactionManager,
-            ItemReader orderItemReader,
-            ItemProcessor orderItemToRebateOrderItemProcessor,
-            ItemWriter rebateOrderItemWriter
+            ItemReader<OrderItem> orderItemReader,
+            ItemProcessor<OrderItem, RebateOrderItem> orderItemToRebateOrderItemProcessor,
+            ItemWriter<RebateOrderItem> rebateOrderItemWriter
     ) {
-        return new StepBuilder("makeRebateOrderItemStep1",jobRepository)
-                .<OrderItem, RebateOrderItem>chunk(100,transactionManager)
+        return new StepBuilder("makeRebateDataStep1", jobRepository)
+                .<OrderItem, RebateOrderItem>chunk(100, transactionManager)
                 .reader(orderItemReader)
                 .processor(orderItemToRebateOrderItemProcessor)
                 .writer(rebateOrderItemWriter)
@@ -68,8 +65,9 @@ public class MakeRebateOrderItemJobConfig {
     @StepScope
     @Bean
     public RepositoryItemReader<OrderItem> orderItemReader(
-            @Value("#{jobParameters['month']}") String yearMonth
+            @Value("#{jobParameters['yearMonth']}") String yearMonth
     ) {
+        yearMonth = "2023-06";
         int monthEndDay = Util.date.getEndDayOf(yearMonth);
         LocalDateTime fromDate = Util.date.parse(yearMonth + "-01 00:00:00.000000");
         LocalDateTime toDate = Util.date.parse(yearMonth + "-%02d 23:59:59.999999".formatted(monthEndDay));
@@ -97,9 +95,13 @@ public class MakeRebateOrderItemJobConfig {
             RebateOrderItem oldRebateOrderItem = rebateOrderItemRepository.findByOrderItemId(item.getOrderItem().getId()).orElse(null);
 
             if (oldRebateOrderItem != null) {
+                if (oldRebateOrderItem.isRebateDone()) {
+                    return;
+                }
+
                 rebateOrderItemRepository.delete(oldRebateOrderItem);
             }
-            System.out.println("Rebate실행!");
+            System.out.println("makeRebateDataJob 실행!");
             rebateOrderItemRepository.save(item);
         });
     }

@@ -19,10 +19,10 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.RepositoryItemReader;
 import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,9 +35,7 @@ public class ProductBackupJobConfig {
     private final ProductRepository productRepository;
     private final ProductBackupRepository productBackupRepository;
     @Bean
-    public Job productBackupJob(JobRepository jobRepository, Step productBackupStep1, CommandLineRunner initData) throws Exception {
-        initData.run();
-
+    public Job productBackupJob(Step productBackupStep1) {
         return new JobBuilder("productBackupJob",jobRepository)
                 .start(productBackupStep1)
                 .build();
@@ -46,12 +44,13 @@ public class ProductBackupJobConfig {
     @Bean
     @JobScope
     public Step productBackupStep1(
+            PlatformTransactionManager transactionManager,
             ItemReader productReader,
             ItemProcessor productToProductBackupProcessor,
             ItemWriter productBackupWriter
     ) {
         return new StepBuilder("productBackupStep1",jobRepository)
-                .<Product, ProductBackup>chunk(100)
+                .<Product, ProductBackup>chunk(100,transactionManager)
                 .reader(productReader)
                 .processor(productToProductBackupProcessor)
                 .writer(productBackupWriter)
@@ -90,3 +89,4 @@ public class ProductBackupJobConfig {
         });
     }
 }
+
